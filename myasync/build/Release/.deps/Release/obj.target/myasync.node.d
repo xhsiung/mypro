@@ -1,0 +1,1 @@
+cmd_Release/obj.target/myasync.node := g++ -shared -pthread -rdynamic -m64  -Wl,-soname=myasync.node -o Release/obj.target/myasync.node -Wl,--start-group Release/obj.target/myasync/myasync.o Release/obj.target/myasync/async.o -Wl,--end-group 
