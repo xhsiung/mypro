@@ -31,7 +31,8 @@
                     notifyTicker: "message",
                     hasVibrate: true,
                     hasSound: true,
-                    hasRecieve: false};
+                    hasRecieve: false,
+		    connErrTimesStop : 5};
         wechat.configure(conf,false);
         wechat.initConnect();
     }

@@ -44,6 +44,9 @@ public class EBusService extends Service {
     JSONObject mSettings;
     static final String SPSetting = "SPSETTING";
 
+    int connErrTimesStop = 0 ;
+    int connErrTimes = 0 ;
+
     private Handler handler = new Handler(){
         @Override
         public void handleMessage(Message msg) {
@@ -222,6 +225,9 @@ public class EBusService extends Service {
     }
 
     private void Init(JSONObject obj) throws JSONException {
+        connErrTimes = 0;
+        connErrTimesStop = obj.has("connErrTimesStop") ? obj.getInt("connErrTimesStop") : 5 ;
+
         hasGetMessage =obj.has("hasRecieve") ? obj.getBoolean("hasRecieve") : true;
         String serverip = obj.has("serverip") ? obj.getString("serverip") : "localhost";
         Boolean hasSaveEl = obj.has("hasSaveEl") ? obj.getBoolean("hasSaveEl") : false ;
@@ -343,7 +349,9 @@ public class EBusService extends Service {
     private Emitter.Listener onConnectError = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
-            Log.d(TAG , "onConnectError");
+            Log.d(TAG, "onConnectError");
+            if ( connErrTimes >= connErrTimesStop ) mSocket.disconnect();
+            connErrTimes++;
         }
     };
 
