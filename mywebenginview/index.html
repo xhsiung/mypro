@@ -1,0 +1,38 @@
+<html>
+ <head>
+   <script type="text/javascript" src="qrc:///qtwebchannel/qwebchannel.js"></script>
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+   <script type="text/javascript">
+       var widget;
+
+       function initialize() {
+           if (typeof qt != 'undefined') new QWebChannel(qt.webChannelTransport, function(channel) {
+                widget = channel.objects.widget;
+            } );
+       }
+
+      function on_btn01_click(){
+          if (typeof widget !== 'undefined') {
+              var obj = {   "name" :  $("#name").val()   , "mobile":  $("#mobile").val()  ,"mybool": true };
+              widget.call(  obj   ) ;
+          }
+          console.log("debug");
+      }
+
+      function jsFun(data){
+            console.log( data["name"]  );
+            console.log( data["mybool"]  );
+      }
+</script>
+</head>
+
+<body onload="initialize()" >
+   <form>
+       name:<input type="text" id="name">
+       mobile:<input type="text" id="mobile" >
+   <input type="button" value="btn01" onclick="on_btn01_click()" >
+   </form>
+
+</body>
+
+</html>
