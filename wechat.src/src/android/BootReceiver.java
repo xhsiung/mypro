@@ -19,8 +19,8 @@ public class BootReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         final String SPSetting = "SPSETTING";
-        Log.d(TAG,"onReceive");
-        Log.d(TAG,intent.getAction());
+        Log.d(TAG, "onReceive");
+        Log.d(TAG, intent.getAction());
 
         if (intent.getAction().equals("android.intent.action.BOOT_COMPLETED") ||
                 intent.getAction().equals("android.intent.action.USER_PRESENT") ||
@@ -30,18 +30,22 @@ public class BootReceiver extends BroadcastReceiver {
             SharedPreferences pre = context.getSharedPreferences(SPSetting, Context.MODE_WORLD_READABLE);
             String configure = pre.getString("wechatSetting", "");
 
-            if (configure.isEmpty()) return ;
+            if (configure.isEmpty() || configure.equalsIgnoreCase("")) return ;
+
             JSONObject obj = null;
             try {
                 obj = new JSONObject(configure);
                 obj.put("hasRecieve", true);
+
+                Intent _intent = new Intent(context, tw.com.bais.wechat.EBusService.class);
+                _intent.putExtra("xaction", 0);
+                _intent.putExtra("configure", obj.toString());
+                context.startService(_intent);
+
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            Intent _intent = new Intent(context, tw.com.bais.wechat.EBusService.class);
-            _intent.putExtra("xaction", 0);
-            _intent.putExtra("configure", obj.toString());
-            context.startService(_intent);
+
         }
     }
 }
