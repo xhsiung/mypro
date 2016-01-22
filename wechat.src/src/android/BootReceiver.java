@@ -30,10 +30,11 @@ public class BootReceiver extends BroadcastReceiver {
             SharedPreferences pre = context.getSharedPreferences(SPSetting, Context.MODE_WORLD_READABLE);
             String configure = pre.getString("wechatSetting", "");
 
+            if (configure.isEmpty()) return ;
             JSONObject obj = null;
             try {
                 obj = new JSONObject(configure);
-                obj.put("hasRecieve",true);
+                obj.put("hasRecieve", true);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
