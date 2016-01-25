@@ -18,6 +18,7 @@ public class WeChat extends CordovaPlugin {
     public void onPause(boolean multitasking) {
         Intent _intent = new Intent(cordova.getActivity(),tw.com.bais.wechat.EBusService.class);
         JSONObject  configure = getSettings();
+        if (!configure.has("serverip") ||!configure.has("port") || !configure.has("notifyTarget") ) return;
         try {
             configure.put("hasRecieve", true);
         } catch (JSONException e) {
@@ -36,6 +37,7 @@ public class WeChat extends CordovaPlugin {
         //super.onResume(multitasking);
         Intent _intent = new Intent(cordova.getActivity(),tw.com.bais.wechat.EBusService.class);
         JSONObject configure = getSettings();
+        if (!configure.has("serverip") ||!configure.has("port") || !configure.has("notifyTarget") ) return;
         try {
             configure.put("hasRecieve",false);
         } catch (JSONException e) {
@@ -46,6 +48,12 @@ public class WeChat extends CordovaPlugin {
         _intent.putExtra("configure", configure.toString());
         cordova.getActivity().startService(_intent);
         Log.d(TAG , "WeChat onResume");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "WeChat onDestroy");
     }
 
     @Override
@@ -69,6 +77,7 @@ public class WeChat extends CordovaPlugin {
             String configure = getSettings().toString();
             _intent.putExtra("xaction", 0);
             _intent.putExtra("configure", configure);
+
             context.startService(_intent);
             return true;
         }

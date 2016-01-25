@@ -25,22 +25,23 @@ public class BootReceiver extends BroadcastReceiver {
         if (intent.getAction().equals("android.intent.action.BOOT_COMPLETED") ||
                 intent.getAction().equals("android.intent.action.USER_PRESENT") ||
                 intent.getAction().equals("tw.com.bais.wechat.BootReceiver") ){
-            Log.d(TAG , "BootReceiver on Boot_COMPLETED  ");
+                Log.d(TAG , "BootReceiver on Boot_COMPLETED  ");
 
-            SharedPreferences pre = context.getSharedPreferences(SPSetting, Context.MODE_WORLD_READABLE);
-            String configure = pre.getString("wechatSetting", "");
-
-            if (configure.isEmpty() || configure.equalsIgnoreCase("")) return ;
-
-            JSONObject obj = null;
             try {
-                obj = new JSONObject(configure);
+                SharedPreferences pre = context.getSharedPreferences(SPSetting, Context.MODE_WORLD_READABLE);
+                String configure = pre.getString("wechatSetting", "");
+                if (configure.isEmpty()) return ;
+
+                JSONObject obj  = new JSONObject(configure);
+                if (!obj.has("serverip") ||!obj.has("port") || !obj.has("notifyTarget") ) return;
                 obj.put("hasRecieve", true);
 
                 Intent _intent = new Intent(context, tw.com.bais.wechat.EBusService.class);
                 _intent.putExtra("xaction", 0);
+
                 _intent.putExtra("configure", obj.toString());
                 context.startService(_intent);
+                Log.d(TAG , "BootReceive END");
 
             } catch (JSONException e) {
                 e.printStackTrace();

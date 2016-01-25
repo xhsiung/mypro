@@ -143,7 +143,15 @@ public class EBusService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Bundle _bundle = intent.getExtras();
+        Bundle _bundle;
+        try {
+            _bundle = intent.getExtras();
+
+        }catch (Exception e) {
+            Log.d(TAG, "_bundle Exception");
+            return -1;
+        }
+
         if (_bundle != null) {
             if (_bundle.getString("configure") != null) {
                 try {
@@ -211,8 +219,8 @@ public class EBusService extends Service {
             }
         }
 
-        return START_STICKY;
-        //return super.onStartCommand(intent, flags, startId);
+        //return START_STICKY;
+        return super.onStartCommand(intent, flags, startId);
     }
 
 
@@ -230,10 +238,11 @@ public class EBusService extends Service {
 
         hasGetMessage =obj.has("hasRecieve") ? obj.getBoolean("hasRecieve") : true;
         String serverip = obj.has("serverip") ? obj.getString("serverip") : "localhost";
-        Boolean hasSaveEl = obj.has("hasSaveEl") ? obj.getBoolean("hasSaveEl") : false ;
+        int port = obj.has("port") ? obj.getInt("port") : 3001 ;
 
+        Boolean hasSaveEl = obj.has("hasSaveEl") ? obj.getBoolean("hasSaveEl") : false ;
         KEY = obj.has("key") ? obj.getString("key") : "1234567890qwertyuiopasdfghjklzxcvbnm";
-        int port = obj.getInt("port");
+
         String url = "http://" + serverip + ":" + port ;
 
         //wakeLock
@@ -398,8 +407,11 @@ public class EBusService extends Service {
 
     @Override
     public void onDestroy() {
-        //super.onDestroy();
+
+        mSocket.disconnect();
+        mSocket = null;
         releaseWakeLock();
+        super.onDestroy();
     }
 
     private void setDeviceID(){
