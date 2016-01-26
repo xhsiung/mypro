@@ -143,84 +143,81 @@ public class EBusService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Bundle _bundle;
-        try {
-            _bundle = intent.getExtras();
+        if (intent != null ) {
+            Bundle _bundle = intent.getExtras();
 
-        }catch (Exception e) {
-            Log.d(TAG, "_bundle Exception");
-            return -1;
-        }
-
-        if (_bundle != null) {
-            if (_bundle.getString("configure") != null) {
-                try {
-                    mSettings = new JSONObject(_bundle.getString("configure"));
-                } catch (JSONException e) {
-                    e.printStackTrace();
+            if (_bundle != null) {
+                if (_bundle.getString("configure") != null) {
+                    try {
+                        mSettings = new JSONObject(_bundle.getString("configure"));
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                 }
-            }
 
-            int xaction = _bundle.getInt("xaction");
-            String channel = _bundle.getString("xchannel");
+                int xaction = _bundle.getInt("xaction");
+                String channel = _bundle.getString("xchannel");
 
-            switch (xaction) {
-                case 0:
-                    try {
-                        Init( mSettings );
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                    break;
-                case 1:
-                    disConnect();
-                    Connect();
-                    break;
+                switch (xaction) {
+                    case 0:
+                        try {
+                            Init(mSettings);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        break;
+                    case 1:
+                        disConnect();
+                        Connect();
+                        break;
 
-                case 2:
-                    try {
-                        Subscribe(channel , KEY);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                    break;
+                    case 2:
+                        try {
+                            Subscribe(channel, KEY);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        break;
 
-                case 3:
-                    try {
-                        UnSubscribe(channel);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                    break;
+                    case 3:
+                        try {
+                            UnSubscribe(channel);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        break;
 
-                case 4:
-                    String msg = _bundle.getString("xmsg");
-                    try {
-                        Send(channel, msg);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                    break;
+                    case 4:
+                        String msg = _bundle.getString("xmsg");
+                        try {
+                            Send(channel, msg);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        break;
 
-                case 5:
-                    disConnect();
-                    break;
+                    case 5:
+                        disConnect();
+                        break;
 
-                case 6:
-                    hasGetMessage =  true;
-                    break;
-                case 7:
-                    hasGetMessage = false;
-                    break;
-                case 8:
-                    int num = _bundle.getInt("num");
-                    setUnreadRec(num);
-		    break;
+                    case 6:
+                        hasGetMessage = true;
+                        break;
+                    case 7:
+                        hasGetMessage = false;
+                        break;
+                    case 8:
+                        int num = _bundle.getInt("num");
+                        setUnreadRec(num);
+                        break;
+                }
             }
         }
 
         //return START_STICKY;
-        return super.onStartCommand(intent, flags, startId);
+        //return START_NOT_STICKY;
+        return START_STICKY_COMPATIBILITY;
+        //return super.onStartCommand(intent, flags, startId);
     }
 
 
@@ -285,16 +282,18 @@ public class EBusService extends Service {
 
     private void Send(String channel , String msg) throws JSONException {
         JSONObject root = new JSONObject(String.format("{'channel': '%s' ,'data': '%s' ,'device': 'mobile', 'user': '%s' }" ,channel , msg ,getGAccount()));
-        mSocket.emit("send" , root.toString());
+        mSocket.emit("send", root.toString());
         Log.d(TAG , "Send:" + channel + " msg:" + msg);
     }
 
     private void Connect(){
-        mSocket.on(Socket.EVENT_CONNECT_ERROR, onConnectError);
-        mSocket.on(Socket.EVENT_CONNECT_TIMEOUT, onConnectError);
-        mSocket.on(Socket.EVENT_RECONNECT , onReconnect);
-        mSocket.on("mqmsg",onMqMsg);
-        mSocket.connect();
+        if (!mSocket.connected()) {
+            mSocket.on(Socket.EVENT_CONNECT_ERROR, onConnectError);
+            mSocket.on(Socket.EVENT_CONNECT_TIMEOUT, onConnectError);
+            mSocket.on(Socket.EVENT_RECONNECT, onReconnect);
+            mSocket.on("mqmsg", onMqMsg);
+            mSocket.connect();
+        }
         Log.d(TAG , "Connect");
     }
 

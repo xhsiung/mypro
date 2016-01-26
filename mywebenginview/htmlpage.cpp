@@ -22,6 +22,6 @@ void HtmlPage::call(QVariantMap msg)
 
     QJsonDocument   jsonDoc = QJsonDocument::fromVariant(msg);
     //call jsavascript  function jsFun
-    QString jsFun = "jsFun(" + jsonDoc.toJson()  + " )";
+    QString jsFun = "jsFun(" + jsonDoc.toJson()  + ")";
     this->page()->runJavaScript( jsFun );
 }
