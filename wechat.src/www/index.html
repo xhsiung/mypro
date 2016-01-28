@@ -24,13 +24,17 @@
 <script>
     //configure
     function initConnect(){
-        var conf ={ serverip:"wechat.ebais.com.tw" ,
+        var conf ={ serverip:"yourservip" ,
                     port: 3001,
                     notifyTarget: "tw.com.my.MainActivity",
-                    notifyTitle: "你好嗎",
+                    notifyTitle: "news",
+            notifyTicker: "message",
+                    key: "mykeypair",
                     hasVibrate: true,
                     hasSound: true,
-                    hasRecieve: false};
+                    hasRecieve: false,
+            hasSaveEl : true ,              
+            connErrTimesStop : 5 } 
         wechat.configure(conf,false);
         wechat.initConnect();
     }

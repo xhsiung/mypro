@@ -15,6 +15,7 @@
 
 <button type="button" onclick="initConnect()" >initConnect</button>
 <button type="button" onclick="disConnect()" >disConnect</button>
+<button type="button" onclick="setUnreadRec(10)" >setUnreadRec(10)</button>
 <button type="button" onclick="deviceID()" >deviceID</button>
 
 <script type="text/javascript" src="cordova.js"></script>
@@ -23,13 +24,17 @@
 <script>
     //configure
     function initConnect(){
-        var conf ={ serverip:"" ,
-                    port: 0 ,
-                    notifyTarget: "",
-                    notifyTitle: "hello",
+        var conf ={ serverip:"yourservip" ,
+                    port: 3001,
+                    notifyTarget: "tw.com.my.MainActivity",
+                    notifyTitle: "news",
+            notifyTicker: "message",
+                    key: "mykeypair",
                     hasVibrate: true,
-                    hasSound: false,
-                    hasRecieve: false};
+                    hasSound: true,
+                    hasRecieve: false,
+            hasSaveEl : true ,              
+            connErrTimesStop : 5 } 
         wechat.configure(conf,false);
         wechat.initConnect();
     }
@@ -37,6 +42,11 @@
     //disconnect
     function disConnect(){
         wechat.disConnect();
+    }
+
+    //setUnreadRec
+    function setUnreadRec(num){
+        wechat.setUnreadRec(num);
     }
 
     //getDeviceID

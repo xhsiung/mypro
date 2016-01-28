@@ -1,7 +1,10 @@
 package tw.com.bais.wechat;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.util.Log;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
@@ -13,6 +16,7 @@ public class WeChat extends CordovaPlugin {
     final String TAG = "WeChat";
     static JSONObject defaultSettings = new JSONObject();
     static JSONObject updateSettings;
+    NetworkInfo mNetworkInfo = null;
 
     @Override
     public void onPause(boolean multitasking) {
@@ -47,7 +51,7 @@ public class WeChat extends CordovaPlugin {
         _intent.putExtra("xaction", 0);
         _intent.putExtra("configure", configure.toString());
         cordova.getActivity().startService(_intent);
-        Log.d(TAG , "WeChat onResume");
+        Log.d(TAG, "WeChat onResume");
     }
 
     @Override
@@ -56,8 +60,15 @@ public class WeChat extends CordovaPlugin {
         Log.d(TAG, "WeChat onDestroy");
     }
 
+
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+        initNetworkInfo();
+        if (mNetworkInfo == null || !mNetworkInfo.isAvailable()) {
+            Log.d(TAG , "WeChat execute mNetworkInfo error");
+            return  false;
+        }
+
         if (action.equalsIgnoreCase("configure")){
             JSONObject settings = args.getJSONObject(0);
             boolean update = args.getBoolean(1);
@@ -101,8 +112,13 @@ public class WeChat extends CordovaPlugin {
         return false;
     }
 
+    private void initNetworkInfo() {
+        ConnectivityManager mConnectivityManager = (ConnectivityManager)cordova.getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+        mNetworkInfo = mConnectivityManager.getActiveNetworkInfo();
+    }
+
     private void setDefaultSettings(JSONObject settings){
-        defaultSettings = settings ;
+        defaultSettings = settings;
     }
 
     private void setUpdateSettings(JSONObject settings){

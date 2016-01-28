@@ -13,10 +13,14 @@ configure
 var conf ={ serverip:"yourserverip" ,                           //connect server  ip
                     port: 0,				        //connect server  port
                     notifyTarget: "tw.com.my.MainActivity",     //main notification  target  MainActivity
-                    notifyTitle: "你好嗎",			//show  notification  titile
+                    notifyTitle: "news",			//show  notification  titile
+		    notifyTicker: "message",			//show  notification  ticker
                     hasVibrate: true,			        //vibrate  open or not
                     hasSound: true,		 	        //sound    open  or  not
-                    hasRecieve: false};			        // message   recieved  or not
+                    hasRecieve: false,			        // message   recieved  or not
+                    key: "mykeypair",			        // key auth 
+		    hasSaveEl : true,			        //save electricity
+		    connErrTimesStop : 5 } ; 			//set connErrTimesStop
 wechat.configure(conf,false);
 ```
 
@@ -71,10 +75,14 @@ Sample
         var conf ={ serverip:"yourservip" ,
                     port: 3001,
                     notifyTarget: "tw.com.my.MainActivity",
-                    notifyTitle: "你好嗎",
+                    notifyTitle: "news",
+		    notifyTicker: "message",
+                    key: "mykeypair",
                     hasVibrate: true,
                     hasSound: true,
-                    hasRecieve: false};
+                    hasRecieve: false,
+		    hasSaveEl : true , 		        
+		    connErrTimesStop : 5 } 
         wechat.configure(conf,false);
         wechat.initConnect();
     }
@@ -109,5 +117,17 @@ Done  work:
 
 ## History
 
-* **v1.0.2** : 2014-11-03
+* **v1.2.12** : 2016-01-288
+  * fix EBusService.class initConf 
+* **v1.2.1** : 2016-01-06
+  * add config connErrTimesStop param to stop connect
+* **v1.2.0** : 2016-01-04
+  * add config hasSaveEl param to save eletricity
+* **v1.1.0** : 2014-11-06
+  * add config keypar auth
+* **v1.0.3** : 2014-11-05
+  * add config notifyTicker field
+  * ebus.1.0.3.jar     initConnect will subscirbe only.
+  * ebus.1.0.3-dev.jar initConnect will unsubscribe and subscribe.
+* **v1.0.2** : 2014-11-03 
     ebus

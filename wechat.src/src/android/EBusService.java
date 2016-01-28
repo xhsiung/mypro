@@ -10,6 +10,8 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -43,6 +45,7 @@ public class EBusService extends Service {
     Socket mSocket = null;
     JSONObject mSettings;
     static final String SPSetting = "SPSETTING";
+    NetworkInfo mNetworkInfo = null;
 
     int connErrTimesStop = 0 ;
     int connErrTimes = 0 ;
@@ -104,7 +107,7 @@ public class EBusService extends Service {
                 try {
                     ShortcutBadger.with(getApplicationContext()).count(unread);
                 }catch (Exception e) {
-                    Log.d(TAG,"ShortcutBadger error");
+                    Log.d(TAG," EBusService ShortcutBadger error");
                 }
 
             }
@@ -143,6 +146,8 @@ public class EBusService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if (!isNetworkInfo()) return START_REDELIVER_INTENT;
+
         if (intent != null ) {
             Bundle _bundle = intent.getExtras();
 
@@ -216,7 +221,9 @@ public class EBusService extends Service {
 
         //return START_STICKY;
         //return START_NOT_STICKY;
-        return START_STICKY_COMPATIBILITY;
+        //return START_STICKY_COMPATIBILITY;
+        //return super.onStartCommand(intent, Service.START_REDELIVER_INTENT, startId);
+        return START_REDELIVER_INTENT;
         //return super.onStartCommand(intent, flags, startId);
     }
 
@@ -225,11 +232,12 @@ public class EBusService extends Service {
         try {
             ShortcutBadger.with(getApplicationContext()).count(num);
         }catch (Exception e) {
-            Log.d(TAG,"ShortcutBadger error");
+            Log.d(TAG,"EBusService ShortcutBadger error");
         }
     }
 
     private void Init(JSONObject obj) throws JSONException {
+
         connErrTimes = 0;
         connErrTimesStop = obj.has("connErrTimesStop") ? obj.getInt("connErrTimesStop") : 5 ;
 
@@ -252,9 +260,7 @@ public class EBusService extends Service {
         //socket
         try {
             mSocket = IO.socket(url);
-            if (! mSocket.connected()){
-                Connect();
-            }
+            Connect();
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
@@ -265,36 +271,38 @@ public class EBusService extends Service {
         editor.putString("wechatSetting", obj.toString());
         editor.commit();
 
-        Log.d(TAG , "Init Configure && Connect");
+        Log.d(TAG , "EBusService Init Configure && Connect");
     }
 
     private void Subscribe(String channel , String key) throws JSONException {
         JSONObject root = new JSONObject(String.format("{'channel': '%s' , 'user': '%s' , 'key': '%s'}" ,channel , getGAccount() , key));
         mSocket.emit("subscribe" ,root.toString());
-        Log.d(TAG , "Subscribe:" + channel);
+        Log.d(TAG , "EBusService Subscribe:" + channel);
     }
 
     private void UnSubscribe(String channel) throws JSONException {
         JSONObject root = new JSONObject(String.format("{'channel': '%s'}" ,channel));
         mSocket.emit("unsubscribe" , root.toString());
-        Log.d(TAG , "UnSubscribe:" + channel);
+        Log.d(TAG , "EBusService UnSubscribe:" + channel);
     }
 
     private void Send(String channel , String msg) throws JSONException {
         JSONObject root = new JSONObject(String.format("{'channel': '%s' ,'data': '%s' ,'device': 'mobile', 'user': '%s' }" ,channel , msg ,getGAccount()));
         mSocket.emit("send", root.toString());
-        Log.d(TAG , "Send:" + channel + " msg:" + msg);
+        Log.d(TAG , "EBusService Send:" + channel + " msg:" + msg);
     }
 
     private void Connect(){
         if (!mSocket.connected()) {
-            mSocket.on(Socket.EVENT_CONNECT_ERROR, onConnectError);
-            mSocket.on(Socket.EVENT_CONNECT_TIMEOUT, onConnectError);
+            //mSocket.on(Socket.EVENT_CONNECT_ERROR, onConnectError);
+            //mSocket.on(Socket.EVENT_CONNECT_TIMEOUT, onConnectError);
+            mSocket.once(Socket.EVENT_CONNECT_ERROR, onConnectError);
+            mSocket.once(Socket.EVENT_CONNECT_TIMEOUT, onConnectError);
             mSocket.on(Socket.EVENT_RECONNECT, onReconnect);
             mSocket.on("mqmsg", onMqMsg);
             mSocket.connect();
         }
-        Log.d(TAG , "Connect");
+        Log.d(TAG , "EBusService Connect");
     }
 
     public void disConnect(){
@@ -303,14 +311,15 @@ public class EBusService extends Service {
             mSocket.off(Socket.EVENT_CONNECT_TIMEOUT, onConnectError);
             mSocket.off("mqmsg", onMqMsg);
             mSocket.disconnect();
-            Log.d(TAG, "disConnect");
+            Log.d(TAG, "EBusService disConnect");
         }
     }
+
 
     private Emitter.Listener onMqMsg = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
-            Log.d(TAG, "onMessage");
+            Log.d(TAG, "EBusService onMessage");
 
             if (hasGetMessage) {
                 Message msg = handler.obtainMessage();
@@ -345,7 +354,7 @@ public class EBusService extends Service {
     private Emitter.Listener onReconnect = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
-            Log.d(TAG , "onReconnect");
+            Log.d(TAG , "EBusService onReconnect");
             try {
                 Subscribe( deviceId , KEY);
             } catch (JSONException e) {
@@ -357,11 +366,28 @@ public class EBusService extends Service {
     private Emitter.Listener onConnectError = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
-            Log.d(TAG, "onConnectError");
-            if ( connErrTimes >= connErrTimesStop ) mSocket.disconnect();
-            connErrTimes++;
+            Log.d(TAG, "EBusService onConnectError");
+            //if ( connErrTimes >= connErrTimesStop ) mSocket.disconnect();
+            //connErrTimes++;
+            //mSocket.disconnect();
+            //stopSelf();
+            mSocket.close();
         }
     };
+
+
+    private boolean isNetworkInfo(){
+        ConnectivityManager mConnectivityManager = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+        mNetworkInfo = mConnectivityManager.getActiveNetworkInfo();
+        if (mNetworkInfo == null || !mNetworkInfo.isAvailable()) {
+            Log.d(TAG, "EBusService initNetworkInfo error stop mSocket connect");
+            mSocket.close();
+            return false;
+        }else{
+            Log.d(TAG, "EBusService initNetworkInfo success mSocket connect");
+            return true;
+        }
+    }
 
     private String getGAccount(){
         try {
@@ -406,7 +432,6 @@ public class EBusService extends Service {
 
     @Override
     public void onDestroy() {
-
         mSocket.disconnect();
         mSocket = null;
         releaseWakeLock();
@@ -417,7 +442,7 @@ public class EBusService extends Service {
         try {
             deviceId = Settings.Secure.getString(this.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
         }catch (Exception e){
-            deviceId = "0987654321";
+            deviceId = "nulldeviceid";
         }
     }
 

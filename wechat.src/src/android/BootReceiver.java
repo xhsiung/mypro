@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 
 import android.content.SharedPreferences;
+import android.net.NetworkInfo;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -19,8 +20,7 @@ public class BootReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         final String SPSetting = "SPSETTING";
-        Log.d(TAG, "onReceive");
-        Log.d(TAG, intent.getAction());
+        Log.d(TAG, "BootReceiver onReceive");
 
         if (intent.getAction().equals("android.intent.action.BOOT_COMPLETED") ||
                 intent.getAction().equals("android.intent.action.USER_PRESENT") ||
@@ -49,4 +49,5 @@ public class BootReceiver extends BroadcastReceiver {
 
         }
     }
+
 }
