@@ -32,7 +32,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import java.net.URISyntaxException;
 
-import de.greenrobot.event.EventBus;
 import me.leolin.shortcutbadger.ShortcutBadger;
 
 
@@ -43,23 +42,13 @@ public class EBusService extends Service {
     static boolean hasGetMessage = true ;
     NotificationManager notificationManager;
     PowerManager.WakeLock wakeLock = null;
-    static Socket mSocket = null;
+    Socket mSocket = null;
     JSONObject mSettings;
     static final String SPSetting = "SPSETTING";
     NetworkInfo mNetworkInfo = null;
 
     int connErrTimesStop = 0 ;
     int connErrTimes = 0 ;
-
-    static final int INIT = 0;
-    static final int RECONN = 1;
-    static final int SUBSCRIBE = 2;
-    static final int UNSUBSCRIBE = 3;
-    static final int SEND = 4;
-    static final int DISCONN = 5;
-    static final int RECIEVEYES = 6;
-    static final int RECIEVENO = 7;
-    static final int UNREADREC = 8;
 
     private Handler handler = new Handler(){
         @Override
@@ -139,19 +128,22 @@ public class EBusService extends Service {
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         //super.onTaskRemoved(rootIntent);
-        mSocket.close();
         this.stopSelf();
+
+        //send broadcast
+        Intent intent = new Intent();
+        intent.setAction("tw.com.bais.wechat.BootReceiver");
+        sendBroadcast(intent);
     }
 
 
     @Override
     public void onCreate() {
         super.onCreate();
-        EventBus.getDefault().register(this);
         setDeviceID();
     }
 
-    /*
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (!isNetworkInfo()) return START_REDELIVER_INTENT;
@@ -234,50 +226,7 @@ public class EBusService extends Service {
         return START_REDELIVER_INTENT;
         //return super.onStartCommand(intent, flags, startId);
     }
-    */
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        //return super.onStartCommand(intent, flags, startId);
-        return START_NOT_STICKY;
-    }
-
-    public void onEventMainThread(EBundle eb) throws JSONException {
-        mSettings = eb.Settings;
-        String channel = eb.channel ;
-        switch (eb.action){
-            case INIT:
-                Init(mSettings);
-                break;
-            case RECONN:
-                disConnect();
-                Connect();
-                break;
-            case SUBSCRIBE:
-                Subscribe(channel ,KEY);
-                break;
-            case UNSUBSCRIBE:
-                UnSubscribe(channel);
-                break;
-            case SEND:
-                String data = eb.data;
-                Send(channel, data );
-                break;
-            case DISCONN:
-                disConnect();
-                break;
-            case RECIEVEYES:
-                hasGetMessage = true;
-                break;
-            case RECIEVENO:
-                hasGetMessage = false;
-                break;
-            case UNREADREC:
-                int num = eb.num;
-                setUnreadRec(num);
-                break;
-        }
-    }
 
     private void setUnreadRec(int num) {
         try {
@@ -321,6 +270,7 @@ public class EBusService extends Service {
         SharedPreferences.Editor editor = getSharedPreferences(SPSetting , Context.MODE_WORLD_WRITEABLE).edit();
         editor.putString("wechatSetting", obj.toString());
         editor.commit();
+
         Log.d(TAG , "EBusService Init Configure && Connect");
     }
 
@@ -482,9 +432,9 @@ public class EBusService extends Service {
 
     @Override
     public void onDestroy() {
-        mSocket.close();
+        mSocket.disconnect();
+        mSocket = null;
         releaseWakeLock();
-        EventBus.getDefault().unregister(this);
         super.onDestroy();
     }
 
@@ -518,5 +468,4 @@ public class EBusService extends Service {
             wakeLock = null;
         }
     }
-
 }
